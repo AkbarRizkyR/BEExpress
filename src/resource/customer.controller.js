@@ -33,10 +33,8 @@ router.use(authenticateToken);
 router.get('/', async (req, res) => {
     try {
         const data = await CustomerService.getAll();
-        console.log('Data berhasil diambil:', data);
         return successResponse(res, 'Data berhasil ditemukan', data);
     } catch (err) {
-        console.error('Error saat mengambil data customer:', err);
         return errorResponse(res, 'Terjadi kesalahan saat mengambil data', err);
     }
 });

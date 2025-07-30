@@ -5,5 +5,6 @@ const adminUserController = require('../resource/adminUser.controller');
 
 router.use('/customers', customerController);
 router.use('/admin', adminUserController);
+router.use('/items', require('../resource/item.controller'));
 
 module.exports = router;

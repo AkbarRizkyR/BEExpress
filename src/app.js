@@ -2,9 +2,11 @@ const express = require('express');
 const routes = require('./routes');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const responseMiddleware = require('./middlewares/response.middlewares');
 
 const app = express();
 app.use(express.json());
+app.use(responseMiddleware);
 
 // Swagger config
 const swaggerOptions = {
@@ -20,6 +22,18 @@ const swaggerOptions = {
             },
         ],
         components: {
+            securitySchemes: {
+                BearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+            security: [
+                {
+                    bearerAuth: [],
+                },
+            ],
             schemas: {
                 Customer: {
                     type: 'object',

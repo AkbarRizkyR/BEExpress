@@ -1,38 +1,43 @@
 const express = require('express');
-const CustomerService = require('../service/customer.service');
-const { CreateCustomerDTO, UpdateCustomerDTO } = require('../dto/customer.dto');
-
 const router = express.Router();
+const CustomerService = require('../service/customer.service');
+const {
+    successResponse,
+    notFoundResponse,
+    errorResponse,
+} = require('../utils/response.utils');
+
+const authenticateToken = require('../middlewares/auth.middleware');
+
+// ⛔ Middleware untuk semua route di bawah /customers
+router.use(authenticateToken);
 
 /**
  * @swagger
  * tags:
- *   name: Customers
- *   description: Customer management
+ *   name: Customer
+ *   description: API untuk manajemen customer
  */
+
 
 /**
  * @swagger
  * /customers:
  *   get:
- *     summary: Get all customers
- *     tags: [Customers]
+ *     summary: Mengambil semua customer
+ *     tags: [Customer]
  *     responses:
  *       200:
- *         description: List of all customers
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Customer'
+ *         description: Data berhasil ditemukan
  */
 router.get('/', async (req, res) => {
     try {
-        const customers = await CustomerService.getAll();
-        res.json(customers);
+        const data = await CustomerService.getAll();
+        console.log('Data berhasil diambil:', data);
+        return successResponse(res, 'Data berhasil ditemukan', data);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error saat mengambil data customer:', err);
+        return errorResponse(res, 'Terjadi kesalahan saat mengambil data', err);
     }
 });
 
@@ -40,127 +45,135 @@ router.get('/', async (req, res) => {
  * @swagger
  * /customers/{id}:
  *   get:
- *     summary: Get a customer by ID
- *     tags: [Customers]
+ *     summary: Mengambil customer berdasarkan ID
+ *     tags: [Customer]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: integer }
- *         description: Customer ID
+ *         schema:
+ *           type: string
+ *         description: ID dari customer
  *     responses:
  *       200:
- *         description: Customer data
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Customer'
- *       404:
- *         description: Customer not found
+ *         description: Data berhasil ditemukan
  */
 router.get('/:id', async (req, res) => {
     try {
-        const customer = await CustomerService.getById(req.params.id);
-        res.json(customer);
+        const { id } = req.params;
+        const data = await CustomerService.getById(id);
+
+        if (!data) {
+            return notFoundResponse(res, 'Data tidak ditemukan');
+        }
+
+        return successResponse(res, 'Data berhasil ditemukan', data);
     } catch (err) {
-        res.status(404).json({ error: err.message });
+        return errorResponse(res, 'Terjadi kesalahan saat mengambil data', err);
     }
 });
 
 /**
  * @swagger
- * /customers/create:
+ * /customers:
  *   post:
- *     summary: Create a new customer
- *     tags: [Customers]
+ *     summary: Menambahkan customer baru
+ *     tags: [Customer]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateCustomerDTO'
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
  *     responses:
- *       201:
- *         description: Customer created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Customer'
- *       400:
- *         description: Bad request
+ *       200:
+ *         description: Data berhasil ditambahkan
  */
-router.post('/create', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
-        const dto = new CreateCustomerDTO(req.body);
-        const newCustomer = await CustomerService.create(dto);
-        res.status(201).json(newCustomer);
+        const data = await CustomerService.create(req.body);
+        return successResponse(res, 'Data berhasil ditambahkan', data);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        return errorResponse(res, 'Terjadi kesalahan saat menambahkan data', err);
     }
 });
 
 /**
  * @swagger
- * /customers/update/{id}:
+ * /customers/{id}:
  *   put:
- *     summary: Update an existing customer
- *     tags: [Customers]
+ *     summary: Memperbarui data customer berdasarkan ID
+ *     tags: [Customer]
  *     parameters:
  *       - in: path
  *         name: id
+ *         schema:
+ *           type: string
  *         required: true
- *         schema: { type: integer }
- *         description: Customer ID
+ *         description: ID customer
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateCustomerDTO'
+ *             type: object
  *     responses:
  *       200:
- *         description: Customer updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Customer'
+ *         description: Data berhasil diperbarui
  *       404:
- *         description: Customer not found
+ *         description: Data tidak ditemukan
  */
-router.put('/update/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
-        const dto = new UpdateCustomerDTO(req.body);
-        const updatedCustomer = await CustomerService.update(req.params.id, dto);
-        res.json(updatedCustomer);
+        const { id } = req.params;
+        const data = await CustomerService.update(id, req.body);
+
+        if (!data) {
+            return notFoundResponse(res, 'Data tidak ditemukan untuk diperbarui');
+        }
+
+        return successResponse(res, 'Data berhasil diperbarui', data);
     } catch (err) {
-        res.status(404).json({ error: err.message });
+        return errorResponse(res, 'Terjadi kesalahan saat memperbarui data', err);
     }
 });
 
 /**
  * @swagger
- * /customers/delete/{id}:
+ * /customers/{id}:
  *   post:
- *     summary: Delete a customer
- *     tags: [Customers]
+ *     summary: Menghapus customer berdasarkan ID
+ *     tags: [Customer]
  *     parameters:
  *       - in: path
  *         name: id
+ *         schema:
+ *           type: string
  *         required: true
- *         schema: { type: integer }
- *         description: Customer ID
+ *         description: ID customer
  *     responses:
  *       200:
- *         description: Customer deleted
+ *         description: Data berhasil dihapus
  *       404:
- *         description: Customer not found
+ *         description: Data tidak ditemukan
  */
-router.post('/delete/:id', async (req, res) => {
+router.post('/:id', async (req, res) => {
     try {
-        const deleted = await CustomerService.delete(req.params.id);
-        res.json({ message: 'Customer deleted', data: deleted });
+        const { id } = req.params;
+        const isDeleted = await CustomerService.delete(id);
+
+        if (!isDeleted) {
+            return notFoundResponse(res, 'Data tidak ditemukan untuk dihapus');
+        }
+
+        return successResponse(res, 'Data berhasil dihapus');
     } catch (err) {
-        res.status(404).json({ error: err.message });
+        return errorResponse(res, 'Terjadi kesalahan saat menghapus data', err);
     }
 });
 

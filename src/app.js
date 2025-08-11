@@ -3,6 +3,8 @@ const routes = require('./routes');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const responseMiddleware = require('./middlewares/response.middlewares');
+const { startDailyScheduler } = require("./middlewares/pengeluaranScheduler");
+
 
 const app = express();
 app.use(express.json());
@@ -76,6 +78,7 @@ const swaggerOptions = {
     apis: ['./src/resource/*.js'], // paths to files containing Swagger annotations
 };
 
+startDailyScheduler();
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

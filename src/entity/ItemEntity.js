@@ -1,4 +1,5 @@
-class Item {
+// src/entities/ItemEntity.js
+class ItemEntity {
     constructor({ id, name, harga_pengali, created_at }) {
         this.id = id;
         this.name = name;
@@ -7,4 +8,4 @@ class Item {
     }
 }
 
-module.exports = Item;
+module.exports = ItemEntity;

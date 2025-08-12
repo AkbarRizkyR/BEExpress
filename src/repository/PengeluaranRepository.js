@@ -2,7 +2,11 @@ const db = require("../config/db");
 
 class PengeluaranRepository {
     async findAll() {
-        const result = await db.query("SELECT * FROM pengeluaran ORDER BY created_at DESC");
+        const result = await db.query(`
+        SELECT id, deskripsi, jumlah, tanggal, created_at
+        FROM pengeluaran
+        ORDER BY created_at DESC
+    `);
         return result.rows;
     }
 
@@ -15,7 +19,7 @@ class PengeluaranRepository {
         const result = await db.query("SELECT * FROM pengeluaran WHERE tipe_id = $1", [tipe_id]);
         return result.rows;
     }
-    
+
     async findAllByDate(tanggal) {
         const result = await db.query(
             `SELECT *
@@ -44,15 +48,16 @@ class PengeluaranRepository {
         return result.rows[0];
     }
 
-    async getTotalHarian(tanggal) {
-        const result = await db.query(
-            `SELECT COALESCE(SUM(jumlah), 0) AS total_harian
-         FROM pengeluaran
-         WHERE tanggal = $1`,
-            [tanggal]
-        );
-        return result.rows[0].total_harian;
+    async getTotalHarian() {
+        const result = await db.query(`
+        SELECT tanggal, COALESCE(SUM(jumlah), 0) AS total_harian
+        FROM pengeluaran
+        GROUP BY tanggal
+        ORDER BY tanggal DESC
+    `);
+        return result.rows[0].total_harian; // ini array [{tanggal: ..., total_harian: ...}, ...]
     }
+
 
     async getTotalPerTipe(tipe_id) {
         const result = await db.query(

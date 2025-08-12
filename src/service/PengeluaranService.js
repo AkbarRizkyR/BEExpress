@@ -5,7 +5,7 @@ const cron = require("node-cron");
 class PengeluaranService {
     async getAllWithTotal(tanggal) {
     const pengeluaran = await PengeluaranRepository.findAll();
-    const totalHarian = await PengeluaranRepository.getTotalHarian(tanggal);
+    const totalHarian = await PengeluaranRepository.getTotalHarian();
     return {
         tanggal,
         total_harian: totalHarian,
